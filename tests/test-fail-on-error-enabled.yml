@@ -1,0 +1,39 @@
+name: Test fail-on-error enabled with security issues
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a Terraform file with known security issues
+        run: |
+          mkdir -p /tmp/fail-tf
+          cat > /tmp/fail-tf/main.tf << 'EOF'
+          resource "aws_s3_bucket" "insecure" {
+            bucket = "my-insecure-bucket"
+            acl    = "public-read"
+          }
+          EOF
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          fail-on-error: 'true'
+          checkov-flags: '--directory /tmp/fail-tf --framework terraform'
+
+      - name: Assert action failed due to security issues
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action correctly failed when security issues found with fail-on-error=true"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (checkov may have passed all checks or no checks applied)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

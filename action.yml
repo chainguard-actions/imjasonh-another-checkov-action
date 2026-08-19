@@ -1,0 +1,28 @@
+name: 'Checkov Security Scan'
+description: 'Run Checkov security scanner and generate reports'
+author: '@imjasonh'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  fail-on-error:
+    description: 'Fail the action if security issues are found'
+    required: false
+    default: 'true'
+  checkov-version:
+    description: 'Version of checkov to install (default: latest)'
+    required: false
+    default: 'latest'
+  checkov-flags:
+    description: 'Flags to pass to checkov (e.g., "--directory . --framework terraform --skip-check CKV_AWS_1")'
+    required: false
+    default: ''
+
+outputs:
+  results:
+    description: 'JSON string of the scan results'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

@@ -1,0 +1,37 @@
+name: Test skip checks via checkov-flags
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a Terraform file with known issues
+        run: |
+          mkdir -p /tmp/skip-tf
+          cat > /tmp/skip-tf/main.tf << 'EOF'
+          resource "aws_s3_bucket" "example" {
+            bucket = "my-example-bucket"
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          fail-on-error: 'true'
+          checkov-flags: >-
+            --directory /tmp/skip-tf
+            --framework terraform
+            --skip-check CKV_AWS_18,CKV_AWS_19,CKV_AWS_20,CKV_AWS_21,CKV_AWS_52,CKV_AWS_144,CKV_AWS_145,CKV2_AWS_6,CKV2_AWS_61,CKV2_AWS_62,CKV_AWS_70,CKV_AWS_86,CKV_AWS_54,CKV_AWS_55,CKV_AWS_56,CKV_AWS_57
+
+      - name: Assert results output is set
+        env:
+          RESULTS: ${{ steps.action.outputs.results }}
+        run: |
+          echo "results: $RESULTS"
+          if [ -z "$RESULTS" ]; then
+            echo "FAIL: expected results output to be set"
+            exit 1
+          fi
+          echo "PASS: results output is set with skipped checks"

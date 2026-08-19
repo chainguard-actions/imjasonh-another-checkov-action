@@ -1,0 +1,35 @@
+name: Test custom checkov version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a clean Terraform file
+        run: |
+          mkdir -p /tmp/versioned-tf
+          cat > /tmp/versioned-tf/main.tf << 'EOF'
+          terraform {
+            required_version = ">= 1.0"
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          fail-on-error: 'false'
+          checkov-version: '3.2.0'
+          checkov-flags: '--directory /tmp/versioned-tf --framework terraform'
+
+      - name: Assert results output is set
+        env:
+          RESULTS: ${{ steps.action.outputs.results }}
+        run: |
+          echo "results: $RESULTS"
+          if [ -z "$RESULTS" ]; then
+            echo "FAIL: expected results output to be set"
+            exit 1
+          fi
+          echo "PASS: results output is set with specific checkov version"

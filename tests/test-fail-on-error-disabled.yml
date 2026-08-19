@@ -1,0 +1,40 @@
+name: Test fail-on-error disabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a Terraform file with known security issues
+        run: |
+          mkdir -p /tmp/insecure-tf
+          cat > /tmp/insecure-tf/main.tf << 'EOF'
+          # Intentionally insecure S3 bucket (no encryption, no versioning, public ACL)
+          resource "aws_s3_bucket" "insecure" {
+            bucket = "my-insecure-bucket"
+            acl    = "public-read"
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          fail-on-error: 'false'
+          checkov-flags: '--directory /tmp/insecure-tf --framework terraform'
+
+      - name: Assert action succeeded despite potential issues
+        run: |
+          echo "PASS: action completed without failing (fail-on-error=false)"
+
+      - name: Assert results output is set
+        env:
+          RESULTS: ${{ steps.action.outputs.results }}
+        run: |
+          echo "results length: ${#RESULTS}"
+          if [ -z "$RESULTS" ]; then
+            echo "FAIL: expected results output to be set even with security issues"
+            exit 1
+          fi
+          echo "PASS: results output is set"

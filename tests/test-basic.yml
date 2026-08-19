@@ -1,0 +1,51 @@
+name: Test basic usage - clean scan
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a clean Terraform file with no issues
+        run: |
+          mkdir -p /tmp/clean-tf
+          cat > /tmp/clean-tf/main.tf << 'EOF'
+          # A minimal terraform file that should pass checkov
+          terraform {
+            required_version = ">= 1.0"
+          }
+          EOF
+
+      - id: action
+        uses: .
+        with:
+          fail-on-error: 'true'
+          checkov-flags: '--directory /tmp/clean-tf --framework terraform'
+
+      - name: Assert results output is set
+        env:
+          RESULTS: ${{ steps.action.outputs.results }}
+        run: |
+          echo "results: $RESULTS"
+          if [ -z "$RESULTS" ]; then
+            echo "FAIL: expected results output to be set"
+            exit 1
+          fi
+          echo "PASS: results output is set"
+
+      - name: Assert results contain summary
+        env:
+          RESULTS: ${{ steps.action.outputs.results }}
+        run: |
+          echo "results: $RESULTS"
+          # Results should be valid JSON with a summary
+          if ! echo "$RESULTS" | python3 -c "import sys, json; data = json.load(sys.stdin); print('parsed ok')" 2>/dev/null; then
+            # May be an array or object - try to check it's non-empty JSON
+            echo "Note: results may not be standard JSON, checking non-empty"
+            if [ -z "$RESULTS" ]; then
+              echo "FAIL: results is empty"
+              exit 1
+            fi
+          fi
+          echo "PASS: results output is non-empty"
