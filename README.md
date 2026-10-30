@@ -4,9 +4,9 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v0.1.0 | [`v0.1.0`](https://github.com/chainguard-actions/imjasonh-another-checkov-action/tree/v0.1.0) | [`392af04`](https://github.com/imjasonh/another-checkov-action/commit/392af04cb49ea61bcd64533b589f44116213d06b) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v0.1.0 | [`v0.1.0`](https://github.com/chainguard-actions/imjasonh-another-checkov-action/tree/v0.1.0) | [`392af04`](https://github.com/imjasonh/another-checkov-action/commit/392af04cb49ea61bcd64533b589f44116213d06b) | [`HARDENING.md`](https://github.com/chainguard-actions/imjasonh-another-checkov-action/blob/v0.1.0/HARDENING.md) |
 
 ## Privacy
 
